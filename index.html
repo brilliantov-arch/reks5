@@ -10,105 +10,114 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-html, body {
-  width: 100%; height: 100%;
-  overflow: hidden;
-  touch-action: none;
+html {
+  height: 100%;
+  height: -webkit-fill-available;
 }
 body {
   background: #050a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  touch-action: none;
   font-family: 'Courier New', monospace;
   color: #fff;
   user-select: none;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 #hud {
   display: flex;
-  gap: 0;
   width: 100%;
-  max-width: 520px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: #0a1428;
   border-bottom: 1px solid #1a4a8a;
   font-size: 11px;
   flex-shrink: 0;
   justify-content: space-between;
+  align-items: center;
 }
-.hv { color: #00d4ff; font-size: 16px; font-weight: bold; }
-.hl { color: #5599cc; font-size: 9px; text-transform: uppercase; }
+.hud-block { text-align: center; }
+.hv { color: #00d4ff; font-size: 15px; font-weight: bold; line-height: 1; }
+.hl { color: #5599cc; font-size: 8px; text-transform: uppercase; }
 #canvas-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
   border-left: 2px solid #1a4a8a;
   border-right: 2px solid #1a4a8a;
   box-shadow: 0 0 30px rgba(0,100,200,0.4);
-  flex-shrink: 0;
 }
-canvas { display: block; }
+canvas { display: block; touch-action: none; }
 #boost-bar {
-  display: flex; gap: 4px;
-  width: 100%; max-width: 520px;
-  padding: 4px 8px;
+  display: flex; gap: 3px;
+  width: 100%;
+  padding: 3px 6px;
   background: #080f20;
   border-top: 1px solid #1a4a8a;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 .bi {
-  padding: 2px 7px;
-  border-radius: 10px;
+  padding: 2px 5px;
+  border-radius: 8px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
-  font-size: 10px; opacity: 0.3; transition: all 0.3s;
+  font-size: 9px; opacity: 0.3; transition: all 0.3s;
+  white-space: nowrap;
 }
-.bi.on { opacity: 1; border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+.bi.on { opacity: 1; border-color: #ffd700; box-shadow: 0 0 6px rgba(255,215,0,0.4); }
 #overlay {
   position: fixed; inset: 0;
   background: rgba(0,5,20,0.92);
   display: flex; align-items: center; justify-content: center;
   z-index: 99;
-  padding: 20px;
+  padding: 16px;
 }
 #popup {
   background: linear-gradient(160deg, #060e24, #0a1835);
   border: 2px solid #1a5aaa;
   border-radius: 14px;
-  padding: 24px 28px;
+  padding: 20px 24px;
   width: 100%;
-  max-width: 340px;
+  max-width: 320px;
   text-align: center;
   box-shadow: 0 0 50px rgba(0,120,255,0.3);
 }
-#ptitle { font-size: 22px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 15px #00d4ff88; margin-bottom: 4px; }
-#psub { font-size: 11px; color: #5599cc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
-#pdesc { font-size: 13px; color: #aaccff; line-height: 1.5; margin-bottom: 18px; }
-#pstars { font-size: 26px; margin-bottom: 8px; }
-#pscore { font-size: 20px; color: #ffd700; font-weight: bold; margin-bottom: 16px; }
+#ptitle { font-size: 20px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 15px #00d4ff88; margin-bottom: 4px; }
+#psub { font-size: 10px; color: #5599cc; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+#pdesc { font-size: 12px; color: #aaccff; line-height: 1.5; margin-bottom: 16px; }
+#pstars { font-size: 24px; margin-bottom: 8px; }
+#pscore { font-size: 18px; color: #ffd700; font-weight: bold; margin-bottom: 14px; }
 #pbtn {
-  padding: 12px 32px;
+  padding: 11px 28px;
   background: linear-gradient(135deg, #005aaa, #0088ff);
   color: #fff; border: none; border-radius: 8px;
-  font-size: 14px; font-weight: bold; letter-spacing: 2px;
+  font-size: 13px; font-weight: bold; letter-spacing: 2px;
   cursor: pointer; font-family: 'Courier New', monospace;
   text-transform: uppercase;
   box-shadow: 0 0 15px rgba(0,136,255,0.4);
-  transition: all 0.2s;
+  transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
-  min-height: 44px;
+  min-height: 44px; width: 100%;
 }
 #pbtn:active { background: linear-gradient(135deg, #0077ee, #00aaff); transform: scale(0.97); }
 </style>
 </head>
 <body>
 <div id="hud">
-  <div><div class="hl">Score</div><div class="hv" id="hScore">0</div></div>
-  <div><div class="hl">Level</div><div class="hv" id="hLevel">1/10</div></div>
-  <div><div class="hl">Lives</div><div class="hv" id="hLives">❤❤❤</div></div>
-  <div><div class="hl">Best</div><div class="hv" id="hBest">0</div></div>
+  <div class="hud-block"><div class="hl">Score</div><div class="hv" id="hScore">0</div></div>
+  <div class="hud-block"><div class="hl">Level</div><div class="hv" id="hLevel">1/10</div></div>
+  <div class="hud-block"><div class="hl">Lives</div><div class="hv" id="hLives">❤❤❤</div></div>
+  <div class="hud-block"><div class="hl">Best</div><div class="hv" id="hBest">0</div></div>
 </div>
 <div id="canvas-wrap"><canvas id="c"></canvas></div>
 <div id="boost-bar">
@@ -140,28 +149,32 @@ if (tg) {
 
 // ── ADAPTIVE CANVAS SIZING ─────────────────────────────────────────────
 var C=document.getElementById('c'),ctx=C.getContext('2d');
+var wrap=document.getElementById('canvas-wrap');
 
-var HUD_H = document.getElementById('hud').offsetHeight || 38;
-var BOOST_H = document.getElementById('boost-bar').offsetHeight || 28;
-var SAFE_TOP = parseInt(getComputedStyle(document.body).paddingTop)||0;
-var SAFE_BOT = parseInt(getComputedStyle(document.body).paddingBottom)||0;
+function initCanvas(){
+  // Measure available space after layout paint
+  var totalH = window.innerHeight;
+  var hudH   = document.getElementById('hud').getBoundingClientRect().height;
+  var bstH   = document.getElementById('boost-bar').getBoundingClientRect().height;
+  var availW = window.innerWidth;
+  var availH = Math.max(totalH - hudH - bstH - 4, 200); // 4px borders
 
-var maxW = Math.min(window.innerWidth, 520);
-var maxH = window.innerHeight - HUD_H - BOOST_H - SAFE_TOP - SAFE_BOT;
-maxH = Math.max(maxH, 400);
+  // Scale to fit, portrait-first
+  var SC_w = availW / 520;
+  var SC_h = availH / 620; // 620 so FOTOSTRANA row has room
+  var SC   = Math.min(SC_w, SC_h, 1.4); // cap at 1.4x to not go huge on tablets
 
-// Keep game aspect close to original (520x600) but fit screen
-var scale = Math.min(maxW / 520, maxH / 600);
-var W = Math.floor(520 * scale);
-var H = Math.floor(600 * scale);
+  var W = Math.floor(520 * SC);
+  var H = Math.floor(620 * SC);
 
-C.width = W; C.height = H;
-C.style.width = W + 'px';
-C.style.height = H + 'px';
-document.getElementById('canvas-wrap').style.width = W + 'px';
+  C.width = W; C.height = H;
+  wrap.style.height = H + 'px';
 
-// Scale factor for game coordinates
-var SC = scale;
+  return {W:W, H:H, SC:SC};
+}
+
+var dims = initCanvas();
+var W = dims.W, H = dims.H, SC = dims.SC;
 
 // ── AUDIO ENGINE (Web Audio API — no files needed) ────────────────────
 var AC=null;
