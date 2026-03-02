@@ -2,70 +2,94 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ARKANOID</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
 body {
   background: #050a1a;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  justify-content: flex-start;
   font-family: 'Courier New', monospace;
   color: #fff;
   user-select: none;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 #hud {
   display: flex;
-  gap: 30px;
-  padding: 8px 20px;
+  gap: 0;
+  width: 100%;
+  max-width: 520px;
+  padding: 6px 12px;
   background: #0a1428;
-  border: 1px solid #1a4a8a;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-size: 13px;
+  border-bottom: 1px solid #1a4a8a;
+  font-size: 11px;
+  flex-shrink: 0;
+  justify-content: space-between;
 }
-.hv { color: #00d4ff; font-size: 18px; font-weight: bold; }
-.hl { color: #5599cc; font-size: 10px; text-transform: uppercase; }
+.hv { color: #00d4ff; font-size: 16px; font-weight: bold; }
+.hl { color: #5599cc; font-size: 9px; text-transform: uppercase; }
 #canvas-wrap {
-  border: 2px solid #1a4a8a;
+  border-left: 2px solid #1a4a8a;
+  border-right: 2px solid #1a4a8a;
   box-shadow: 0 0 30px rgba(0,100,200,0.4);
+  flex-shrink: 0;
 }
 canvas { display: block; }
 #boost-bar {
-  display: flex; gap: 8px; margin-top: 8px;
+  display: flex; gap: 4px;
+  width: 100%; max-width: 520px;
+  padding: 4px 8px;
+  background: #080f20;
+  border-top: 1px solid #1a4a8a;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .bi {
-  padding: 3px 10px;
-  border-radius: 12px;
+  padding: 2px 7px;
+  border-radius: 10px;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
-  font-size: 11px; opacity: 0.3; transition: all 0.3s;
+  font-size: 10px; opacity: 0.3; transition: all 0.3s;
 }
 .bi.on { opacity: 1; border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
 #overlay {
   position: fixed; inset: 0;
-  background: rgba(0,5,20,0.88);
+  background: rgba(0,5,20,0.92);
   display: flex; align-items: center; justify-content: center;
   z-index: 99;
+  padding: 20px;
 }
 #popup {
   background: linear-gradient(160deg, #060e24, #0a1835);
   border: 2px solid #1a5aaa;
   border-radius: 14px;
-  padding: 32px 36px;
-  width: 380px;
+  padding: 24px 28px;
+  width: 100%;
+  max-width: 340px;
   text-align: center;
   box-shadow: 0 0 50px rgba(0,120,255,0.3);
 }
-#ptitle { font-size: 26px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 15px #00d4ff88; margin-bottom: 4px; }
-#psub { font-size: 12px; color: #5599cc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 16px; }
-#pdesc { font-size: 14px; color: #aaccff; line-height: 1.6; margin-bottom: 22px; }
-#pstars { font-size: 28px; margin-bottom: 10px; }
-#pscore { font-size: 22px; color: #ffd700; font-weight: bold; margin-bottom: 18px; }
+#ptitle { font-size: 22px; font-weight: bold; color: #00d4ff; text-shadow: 0 0 15px #00d4ff88; margin-bottom: 4px; }
+#psub { font-size: 11px; color: #5599cc; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
+#pdesc { font-size: 13px; color: #aaccff; line-height: 1.5; margin-bottom: 18px; }
+#pstars { font-size: 26px; margin-bottom: 8px; }
+#pscore { font-size: 20px; color: #ffd700; font-weight: bold; margin-bottom: 16px; }
 #pbtn {
-  padding: 12px 36px;
+  padding: 12px 32px;
   background: linear-gradient(135deg, #005aaa, #0088ff);
   color: #fff; border: none; border-radius: 8px;
   font-size: 14px; font-weight: bold; letter-spacing: 2px;
@@ -73,8 +97,10 @@ canvas { display: block; }
   text-transform: uppercase;
   box-shadow: 0 0 15px rgba(0,136,255,0.4);
   transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
 }
-#pbtn:hover { background: linear-gradient(135deg, #0077ee, #00aaff); transform: translateY(-1px); }
+#pbtn:active { background: linear-gradient(135deg, #0077ee, #00aaff); transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -90,6 +116,7 @@ canvas { display: block; }
   <div class="bi" id="bi-wide">📏 WIDE <span id="bt-wide"></span></div>
   <div class="bi" id="bi-slow">🐢 SLOW <span id="bt-slow"></span></div>
   <div class="bi" id="bi-pierce">💎 PIERCE <span id="bt-pierce"></span></div>
+  <div class="bi" id="bi-gun">🔫 GUN <span id="bt-gun"></span></div>
 </div>
 <div id="overlay">
   <div id="popup">
@@ -102,8 +129,38 @@ canvas { display: block; }
   </div>
 </div>
 <script>
-var C=document.getElementById('c'),ctx=C.getContext('2d'),W=520,H=600;
-C.width=W;C.height=H;
+// ── TELEGRAM MINI APP INIT ─────────────────────────────────────────────
+var tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.disableVerticalSwipes && tg.disableVerticalSwipes();
+}
+
+// ── ADAPTIVE CANVAS SIZING ─────────────────────────────────────────────
+var C=document.getElementById('c'),ctx=C.getContext('2d');
+
+var HUD_H = document.getElementById('hud').offsetHeight || 38;
+var BOOST_H = document.getElementById('boost-bar').offsetHeight || 28;
+var SAFE_TOP = parseInt(getComputedStyle(document.body).paddingTop)||0;
+var SAFE_BOT = parseInt(getComputedStyle(document.body).paddingBottom)||0;
+
+var maxW = Math.min(window.innerWidth, 520);
+var maxH = window.innerHeight - HUD_H - BOOST_H - SAFE_TOP - SAFE_BOT;
+maxH = Math.max(maxH, 400);
+
+// Keep game aspect close to original (520x600) but fit screen
+var scale = Math.min(maxW / 520, maxH / 600);
+var W = Math.floor(520 * scale);
+var H = Math.floor(600 * scale);
+
+C.width = W; C.height = H;
+C.style.width = W + 'px';
+C.style.height = H + 'px';
+document.getElementById('canvas-wrap').style.width = W + 'px';
+
+// Scale factor for game coordinates
+var SC = scale;
 
 // ── AUDIO ENGINE (Web Audio API — no files needed) ────────────────────
 var AC=null;
@@ -170,6 +227,12 @@ var SFX={
     playTone(440,'sine',0.15,0.2,660);
     setTimeout(function(){playTone(550,'sine',0.12,0.18,770);},50);
   },
+  boostGun:    function(){                                                     // пулемёт — резкий пиф-паф
+    playTone(800,'square',0.04,0.25,400);
+  },
+  gunShot:     function(){                                                     // одиночный выстрел
+    playTone(900,'square',0.03,0.18,500);
+  },
   boostPierce: function(){                                                     // пробивание — мягкий переливчатый аккорд
     playTone(523,'sine',0.25,0.18,784);
     setTimeout(function(){playTone(659,'sine',0.2,0.15,988);},40);
@@ -198,11 +261,11 @@ var LEVELS=[
 ];
 
 var ROWCOLS=['#ff4466','#ff8833','#ffdd00','#44ff88','#33aaff','#aa66ff','#ff66cc','#88ffdd','#ccbbaa','#ff6644'];
-var BOOSTS=['multi','wide','slow','pierce'];
-var BICON={multi:'⚡',wide:'📏',slow:'🐢',pierce:'💎'};
-var BCOL={multi:'#ffee44',wide:'#66ffaa',slow:'#33ddff',pierce:'#aaddff'};
+var BOOSTS=['multi','wide','slow','pierce','gun'];
+var BICON={multi:'⚡',wide:'📏',slow:'🐢',pierce:'💎',gun:'🔫'};
+var BCOL={multi:'#ffee44',wide:'#66ffaa',slow:'#33ddff',pierce:'#aaddff',gun:'#ff8844'};
 
-var BW=46,BH=24,BPAD=3,FLEFT=10,FTOP=28,COLS=10;
+var BW=Math.floor(46*SC),BH=Math.floor(24*SC),BPAD=Math.floor(3*SC),FLEFT=Math.floor(10*SC),FTOP=Math.floor(28*SC),COLS=10;
 
 function mkB(c,r,hp){
   return {c:c,r:r,x:FLEFT+c*(BW+BPAD),y:FTOP+r*(BH+BPAD),w:BW,h:BH,hp:hp,maxHp:hp,
@@ -267,18 +330,20 @@ function buildLayout(name){
 }
 
 var lvlIdx=0,score=0,best=0,lives=3;
-var bricks=[],balls=[],capsules=[],activeBoosters={};
-var paddle={x:W/2-45,y:H-38,w:90,h:14};
+var bricks=[],balls=[],capsules=[],bullets=[],activeBoosters={};
+var PADDLE_W=Math.floor(90*SC), PADDLE_H=Math.floor(14*SC), BALL_R=Math.max(5,Math.floor(7*SC));
+var paddle={x:W/2-PADDLE_W/2,y:H-Math.floor(38*SC),w:PADDLE_W,h:PADDLE_H};
 var gameOn=false,wonLevel=false,levelStartScore=0;
 var keys={},mouseX=null;
 var ballLaunched=false;
+var gunTimer=0;
 
 function baseSpeed(){ return 4.8+lvlIdx*0.33; }
 function slowOn(){ return activeBoosters.slow&&Date.now()<activeBoosters.slow; }
 
 function spawnBall(){
   ballLaunched=false;
-  balls=[{x:paddle.x+paddle.w/2,y:paddle.y-10,vx:0,vy:0,r:7,trail:[]}];
+  balls=[{x:paddle.x+paddle.w/2,y:paddle.y-BALL_R-1,vx:0,vy:0,r:BALL_R,trail:[]}];
 }
 
 function launchBall(){
@@ -298,10 +363,11 @@ function activate(type){
       var b=balls[0];
       var ang=Math.atan2(-b.vy,-b.vx);
       var spd=Math.hypot(b.vx,b.vy);
-      balls.push({x:b.x,y:b.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,r:7,trail:[]});
+      balls.push({x:b.x,y:b.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,r:BALL_R,trail:[]});
     }
   }
   if(type==='wide') SFX.boostWide();
+  if(type==='gun'){ SFX.boostGun(); gunTimer=0; }
   if(type==='pierce') SFX.boostPierce();
   if(type==='slow'){
     SFX.boostSlow();
@@ -316,7 +382,8 @@ function activate(type){
 function initLevel(){
   wonLevel=false;
   bricks=buildLayout(LEVELS[lvlIdx].layout);
-  capsules=[];activeBoosters={};
+  capsules=[];bullets=[];activeBoosters={};
+  paddle.w=PADDLE_W;
   paddle.x=W/2-paddle.w/2;
   spawnBall();updateHUD();
 }
@@ -413,16 +480,28 @@ document.addEventListener('keydown',function(e){
   if(e.key===' '||e.key==='Enter') launchBall();
 });
 document.addEventListener('keyup',function(e){keys[e.key]=false;});
-C.addEventListener('mousemove',function(e){var r=C.getBoundingClientRect();mouseX=e.clientX-r.left;});
-C.addEventListener('click',function(){launchBall();});
-C.addEventListener('touchmove',function(e){e.preventDefault();var r=C.getBoundingClientRect();mouseX=e.touches[0].clientX-r.left;},{passive:false});
-C.addEventListener('touchstart',function(){launchBall();},{passive:true});
+C.addEventListener('mousemove',function(e){
+  var r=C.getBoundingClientRect();
+  mouseX=(e.clientX-r.left)*(W/r.width);
+});
+C.addEventListener('click',function(){getAC();launchBall();});
+C.addEventListener('touchmove',function(e){
+  e.preventDefault();
+  var r=C.getBoundingClientRect();
+  mouseX=(e.touches[0].clientX-r.left)*(W/r.width);
+},{passive:false});
+C.addEventListener('touchstart',function(e){
+  getAC();
+  launchBall();
+  var r=C.getBoundingClientRect();
+  mouseX=(e.touches[0].clientX-r.left)*(W/r.width);
+},{passive:true});
 
 function update(){
   if(!gameOn) return;
   // Paddle
-  if(keys['ArrowLeft']||keys['a']) paddle.x-=7;
-  if(keys['ArrowRight']||keys['d']) paddle.x+=7;
+  if(keys['ArrowLeft']||keys['a']) paddle.x-=Math.floor(7*SC)||5;
+  if(keys['ArrowRight']||keys['d']) paddle.x+=Math.floor(7*SC)||5;
   if(mouseX!==null) paddle.x=mouseX-paddle.w/2;
   paddle.x=Math.max(0,Math.min(W-paddle.w,paddle.x));
 
@@ -430,7 +509,7 @@ function update(){
   var pierce=activeBoosters.pierce&&now<activeBoosters.pierce;
   var fire=false;
   var wide=activeBoosters.wide&&now<activeBoosters.wide;
-  paddle.w=wide?180:90;
+  paddle.w=wide?Math.floor(PADDLE_W*2):PADDLE_W;
 
   balls.forEach(function(ball){
     // Stick to paddle before launch
@@ -468,9 +547,12 @@ function update(){
       if(bk.hp<=0){
         bk.alive=false;score+=100*bk.maxHp;updateHUD();
         if(bk.maxHp>=3) SFX.breakHard(); else SFX.break();
+        if(tg&&tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         if(bk.boost) capsules.push({x:bk.x+bk.w/2,y:bk.y+bk.h,type:bk.boost,vy:2.5,alive:true});
         if(!wonLevel&&bricks.every(function(b){return !b.alive;})){
-          wonLevel=true;SFX.levelWin();setTimeout(showSuccess,200);
+          wonLevel=true;SFX.levelWin();
+          if(tg&&tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          setTimeout(showSuccess,200);
         }
       } else {
         SFX.hit();
@@ -487,7 +569,15 @@ function update(){
   balls=balls.filter(function(b){return b.y-b.r<H;});
   if(!balls.length&&!wonLevel){
     lives--;updateHUD();
-    if(lives<=0){SFX.gameOver();showGameOver();}else{SFX.loseLife();spawnBall();}
+    if(lives<=0){
+      SFX.gameOver();
+      if(tg&&tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+      showGameOver();
+    } else {
+      SFX.loseLife();
+      if(tg&&tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+      spawnBall();
+    }
   }
 
   capsules.forEach(function(cap){
@@ -501,6 +591,49 @@ function update(){
     if(cap.y>H) cap.alive=false;
   });
   capsules=capsules.filter(function(c){return c.alive;});
+
+  // Gun auto-fire
+  var gunOn=activeBoosters.gun&&Date.now()<activeBoosters.gun;
+  if(gunOn&&gameOn){
+    gunTimer--;
+    if(gunTimer<=0){
+      gunTimer=18;
+      bullets.push({x:paddle.x+paddle.w*0.3, y:paddle.y-2, alive:true});
+      bullets.push({x:paddle.x+paddle.w*0.7, y:paddle.y-2, alive:true});
+      SFX.gunShot();
+    }
+  }
+
+  // Bullet update
+  var bulletSpd=Math.floor(10*SC)||6;
+  bullets.forEach(function(bl){
+    if(!bl.alive) return;
+    bl.y-=bulletSpd;
+    if(bl.y<0){bl.alive=false;return;}
+    for(var i=0;i<bricks.length;i++){
+      var bk=bricks[i];
+      if(!bk.alive) continue;
+      if(bl.x<bk.x||bl.x>bk.x+bk.w) continue;
+      if(bl.y<bk.y||bl.y>bk.y+bk.h) continue;
+      // Hit!
+      bl.alive=false;
+      bk.hp--;bk.flash=10;
+      if(bk.hp<=0){
+        bk.alive=false;score+=100*bk.maxHp;updateHUD();
+        if(bk.maxHp>=3) SFX.breakHard(); else SFX.break();
+        if(tg&&tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        if(bk.boost) capsules.push({x:bk.x+bk.w/2,y:bk.y+bk.h,type:bk.boost,vy:2.5,alive:true});
+        if(!wonLevel&&bricks.every(function(b){return !b.alive;})){
+          wonLevel=true;SFX.levelWin();
+          if(tg&&tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+          setTimeout(showSuccess,200);
+        }
+      } else { SFX.hit(); }
+      break;
+    }
+  });
+  bullets=bullets.filter(function(bl){return bl.alive;});
+
   updateBoostHUD();
 }
 
@@ -578,11 +711,20 @@ function draw(){
     ctx.fillStyle='#fff';ctx.fillText(BICON[cap.type],cap.x,cap.y+1);
   });
 
+  // Bullets
+  bullets.forEach(function(bl){
+    ctx.shadowColor='#ffaa44';ctx.shadowBlur=8;
+    ctx.fillStyle='#ffee88';
+    ctx.beginPath();ctx.ellipse(bl.x,bl.y-4,2,5,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+  });
+
   // Paddle
+  var gunOn2=activeBoosters.gun&&now<activeBoosters.gun;
   var pg=ctx.createLinearGradient(paddle.x,paddle.y,paddle.x,paddle.y+paddle.h);
-  var pGlow=pierce?'#aaddff':slow?'#33ddff':multi?'#ffdd33':wide?'#66ffaa':'#33aaff';
-  pg.addColorStop(0,pierce?'#99eeff':slow?'#55ddff':wide?'#99ffcc':'#66bbff');
-  pg.addColorStop(1,pierce?'#224488':slow?'#115588':wide?'#116633':'#1155aa');
+  var pGlow=gunOn2?'#ff8844':pierce?'#aaddff':slow?'#33ddff':multi?'#ffdd33':wide?'#66ffaa':'#33aaff';
+  pg.addColorStop(0,gunOn2?'#ffbb66':pierce?'#99eeff':slow?'#55ddff':wide?'#99ffcc':'#66bbff');
+  pg.addColorStop(1,gunOn2?'#cc4400':pierce?'#224488':slow?'#115588':wide?'#116633':'#1155aa');
   ctx.shadowColor=pGlow;ctx.shadowBlur=16;
   ctx.fillStyle=pg;rr(paddle.x,paddle.y,paddle.w,paddle.h,7);ctx.fill();
   ctx.shadowBlur=0;
