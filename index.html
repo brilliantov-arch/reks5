@@ -126,6 +126,7 @@ canvas { display: block; }
     <div id="pstars" style="display:none"></div>
     <div id="pscore" style="display:none"></div>
     <button id="pbtn">СТАРТ</button>
+    <div id="pfoto" style="margin-top:14px;font-size:11px;color:#5599cc;">Больше новых игр на <a href="https://www.fotostrana.ru" target="_blank" style="color:#00d4ff;text-decoration:none;border-bottom:1px solid #00d4ff55;">www.fotostrana.ru</a>!</div>
   </div>
 </div>
 <script>
@@ -282,6 +283,125 @@ function addBoosts(arr){
   return arr;
 }
 
+var FOTO_WORD='FOTOSTRANA';
+var FOTO_COLORS=['#ff4466','#ff8833','#ffdd00','#44ff88','#33aaff','#aa66ff','#ff66cc','#88ffdd','#ffd700','#ff6644'];
+
+// Celebration animation state
+var celebration={active:false,t:0,letters:[]};
+
+function triggerCelebration(cx,cy){
+  celebration.active=true;
+  celebration.t=0;
+  celebration.letters=FOTO_WORD.split('').map(function(ch,i){
+    return {
+      ch:ch,
+      x:cx, y:cy,
+      tx: W/2 + (i - FOTO_WORD.length/2 + 0.5)*(Math.floor(26*SC)),
+      ty: H/2,
+      vx:(Math.random()-0.5)*6,
+      vy:-(Math.random()*4+3),
+      col:FOTO_COLORS[i],
+      scale:0, rot:Math.random()*Math.PI*2
+    };
+  });
+}
+
+function updateCelebration(){
+  if(!celebration.active) return;
+  celebration.t++;
+  var t=celebration.t;
+  celebration.letters.forEach(function(l,i){
+    var delay=i*3;
+    if(t<delay) return;
+    var lt=t-delay;
+    if(lt<20){
+      // Phase 1: explode outward
+      l.x+=l.vx; l.y+=l.vy; l.vy+=0.3;
+      l.scale=lt/20; l.rot+=0.15;
+    } else if(lt<50){
+      // Phase 2: fly to final positions
+      l.x=l.x+(l.tx-l.x)*0.12;
+      l.y=l.y+(l.ty-l.y)*0.12;
+      l.scale=Math.min(1,l.scale+0.05);
+      l.rot*=0.85;
+    } else {
+      // Phase 3: settled, gentle pulse
+      l.x=l.tx; l.y=l.ty;
+      l.scale=1+0.05*Math.sin((t-50)*0.1+i*0.5);
+      l.rot=0;
+    }
+  });
+  if(t>180) celebration.active=false; // ~3s total at 60fps
+}
+
+function drawCelebration(){
+  if(!celebration.letters.length) return;
+  var t=celebration.t;
+  // Fade out during last 40 frames (t 140..180)
+  var alpha=t>140?Math.max(0,(180-t)/40):1;
+  if(alpha<=0) return;
+  ctx.globalAlpha=alpha;
+  celebration.letters.forEach(function(l,i){
+    if(l.scale<=0) return;
+    ctx.save();
+    ctx.translate(l.x,l.y);
+    ctx.rotate(l.rot);
+    ctx.scale(l.scale,l.scale);
+    var fs=Math.floor(22*SC);
+    ctx.font='bold '+fs+'px Courier New';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor=l.col;ctx.shadowBlur=12;
+    ctx.fillStyle=l.col;
+    ctx.fillText(l.ch,0,0);
+    // glow ring
+    ctx.shadowBlur=0;
+    ctx.strokeStyle=l.col;ctx.lineWidth=1;
+    ctx.globalAlpha=0.3+0.3*Math.sin(t*0.2+i);
+    ctx.beginPath();ctx.arc(0,0,fs*0.7,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.restore();
+  });
+  ctx.globalAlpha=1;
+
+  // Show x2 bonus text after letters settle
+  if(t>55&&t<150){
+    var ta=t<70?(t-55)/15:t>130?(150-t)/20:1;
+    ctx.globalAlpha=alpha*ta;
+    ctx.font='bold '+Math.floor(20*SC)+'px Courier New';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#ffd700';
+    ctx.shadowColor='#ffd700';ctx.shadowBlur=20;
+    ctx.fillText('x2 ОЧКИ!',W/2,H/2-Math.floor(36*SC));
+    ctx.shadowBlur=0;
+    ctx.globalAlpha=1;
+  }
+}
+
+function addFotostranaRow(arr){
+  // Place FOTOSTRANA letters in the last row of bricks, centred
+  var word=FOTO_WORD;
+  var startCol=Math.floor((COLS-word.length)/2);
+  // Find the lowest row used by existing bricks
+  var maxRow=0;
+  arr.forEach(function(b){if(b.r>maxRow)maxRow=b.r;});
+  var fotoRow=maxRow+2; // two rows below existing bricks
+  // Make sure it fits vertically
+  var maxY=FTOP+fotoRow*(BH+BPAD)+BH;
+  if(maxY>H-Math.floor(80*SC)) fotoRow=maxRow+1;
+  if(fotoRow<0) fotoRow=0;
+
+  word.split('').forEach(function(ch,i){
+    var col=startCol+i;
+    if(col<0||col>=COLS) return;
+    var b=mkB(col,fotoRow,1);
+    b.isFoto=true;
+    b.fotoLetter=ch;
+    b.fotoIdx=i;
+    arr.push(b);
+  });
+  return arr;
+}
+
 function buildLayout(name){
   var arr=[];
   if(name==='triple'){
@@ -326,6 +446,7 @@ function buildLayout(name){
   } else if(name==='final'){
     for(var r=0;r<10;r++) for(var c=0;c<COLS;c++) arr.push(mkB(c,r,r<4?3:r<7?2:1));
   }
+  addFotostranaRow(arr);
   return addBoosts(arr);
 }
 
@@ -337,6 +458,7 @@ var gameOn=false,wonLevel=false,levelStartScore=0;
 var keys={},mouseX=null;
 var ballLaunched=false;
 var gunTimer=0;
+var fotoDestroyed=false; // tracks if all FOTOSTRANA bricks destroyed this level
 
 function baseSpeed(){ return 4.8+lvlIdx*0.33; }
 function slowOn(){ return activeBoosters.slow&&Date.now()<activeBoosters.slow; }
@@ -383,6 +505,8 @@ function initLevel(){
   wonLevel=false;
   bricks=buildLayout(LEVELS[lvlIdx].layout);
   capsules=[];bullets=[];activeBoosters={};
+  fotoDestroyed=false;
+  celebration={active:false,t:0,letters:[]};
   paddle.w=PADDLE_W;
   paddle.x=W/2-paddle.w/2;
   spawnBall();updateHUD();
@@ -401,6 +525,7 @@ function showLevelPopup(){
   psub.textContent=ld.name;
   pdesc.textContent=ld.desc;
   pstars.style.display='none';pscore.style.display='none';
+  document.getElementById('pfoto').style.display='none';
   pbtn.textContent='ИГРАТЬ';
   overlay.style.display='flex';
 }
@@ -416,6 +541,7 @@ function showSuccess(){
   pstars.textContent=st;pstars.style.display='block';
   pscore.textContent='СЧЁТ: '+score;pscore.style.display='block';
   pbtn.textContent=lvlIdx+1===10?'ЗАНОВО':'ДАЛЕЕ';
+  document.getElementById('pfoto').style.display='block';
   overlay.style.display='flex';
 }
 
@@ -425,6 +551,7 @@ function showGameOver(){
   psub.textContent='СЧЁТ: '+score;
   pdesc.textContent='Мяч упал. Начни заново!';
   pstars.style.display='none';pscore.style.display='none';
+  document.getElementById('pfoto').style.display='none';
   pbtn.textContent='ЕЩЁ РАЗ';
   overlay.style.display='flex';
 }
@@ -545,7 +672,19 @@ function update(){
 
       bk.hp-=1;bk.flash=10;
       if(bk.hp<=0){
-        bk.alive=false;score+=100*bk.maxHp;updateHUD();
+        bk.alive=false;
+        var pts=100*bk.maxHp;
+        // Check if this was the last FOTOSTRANA letter brick
+        if(bk.isFoto&&!fotoDestroyed){
+          var fotoAlive=bricks.filter(function(b){return b.isFoto&&b.alive&&b!==bk;});
+          if(fotoAlive.length===0){
+            fotoDestroyed=true;
+            pts*=2; // x2 bonus
+            triggerCelebration(bk.x+bk.w/2, bk.y+bk.h/2);
+            playTone(880,'sine',0.2,0.3,1760);
+          }
+        }
+        score+=pts;updateHUD();
         if(bk.maxHp>=3) SFX.breakHard(); else SFX.break();
         if(tg&&tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         if(bk.boost) capsules.push({x:bk.x+bk.w/2,y:bk.y+bk.h,type:bk.boost,vy:2.5,alive:true});
@@ -619,7 +758,18 @@ function update(){
       bl.alive=false;
       bk.hp--;bk.flash=10;
       if(bk.hp<=0){
-        bk.alive=false;score+=100*bk.maxHp;updateHUD();
+        bk.alive=false;
+        var pts=100*bk.maxHp;
+        if(bk.isFoto&&!fotoDestroyed){
+          var fotoAlive=bricks.filter(function(b){return b.isFoto&&b.alive&&b!==bk;});
+          if(fotoAlive.length===0){
+            fotoDestroyed=true;
+            pts*=2;
+            triggerCelebration(bk.x+bk.w/2, bk.y+bk.h/2);
+            playTone(880,'sine',0.2,0.3,1760);
+          }
+        }
+        score+=pts;updateHUD();
         if(bk.maxHp>=3) SFX.breakHard(); else SFX.break();
         if(tg&&tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         if(bk.boost) capsules.push({x:bk.x+bk.w/2,y:bk.y+bk.h,type:bk.boost,vy:2.5,alive:true});
@@ -634,6 +784,7 @@ function update(){
   });
   bullets=bullets.filter(function(bl){return bl.alive;});
 
+  updateCelebration();
   updateBoostHUD();
 }
 
@@ -680,6 +831,26 @@ function draw(){
       ctx.font=(bk.h-4)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillText(BICON[bk.boost],bk.x+bk.w/2+1,bk.y+bk.h/2+2);
       ctx.fillStyle='#fff';ctx.fillText(BICON[bk.boost],bk.x+bk.w/2,bk.y+bk.h/2);
+    } else if(bk.isFoto){
+      // FOTOSTRANA letter brick — bright purple/magenta gradient
+      var fc=FOTO_COLORS[bk.fotoIdx];
+      var g=ctx.createLinearGradient(bk.x,bk.y,bk.x,bk.y+bk.h);
+      g.addColorStop(0,flash?'#ffffff':lc(fc,40));
+      g.addColorStop(1,flash?'#dddddd':dc(fc,20));
+      ctx.shadowColor=fc;ctx.shadowBlur=flash?14:8;
+      ctx.fillStyle=g;rr(bk.x+1,bk.y+1,bk.w-2,bk.h-2,4);ctx.fill();
+      // bright border
+      ctx.strokeStyle=flash?'#fff':fc;ctx.lineWidth=1.5;
+      rr(bk.x+1,bk.y+1,bk.w-2,bk.h-2,4);ctx.stroke();
+      ctx.shadowBlur=0;
+      // Letter
+      var fs=Math.floor((bk.h-3)*0.85);
+      ctx.font='bold '+fs+'px Courier New';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(0,0,0,0.35)';
+      ctx.fillText(bk.fotoLetter,bk.x+bk.w/2+1,bk.y+bk.h/2+1);
+      ctx.fillStyle='#fff';
+      ctx.fillText(bk.fotoLetter,bk.x+bk.w/2,bk.y+bk.h/2);
     } else {
       var g=ctx.createLinearGradient(bk.x,bk.y,bk.x,bk.y+bk.h);
       g.addColorStop(0,flash?'#ffffff':lc(bk.color,50));
@@ -745,6 +916,9 @@ function draw(){
     ctx.fillStyle=bg;ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;
   });
+
+  // Celebration animation
+  drawCelebration();
 
   // Launch hint
   if(gameOn&&!ballLaunched){
